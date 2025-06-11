@@ -1,57 +1,43 @@
-# MIT License
-# 
-# Copyright (c) 2023 vanes430
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+FROM        --platform=$TARGETOS/$TARGETARCH node:20-bookworm-slim
 
-# Use the official minimal Ubuntu 22.04 image as the base image with multi-platform support
-# Use the official Node.js 20 Alpine image with multi-platform support
-FROM --platform=$TARGETOS/$TARGETARCH node:20-alpine
+LABEL       author="Michael Parker" maintainer="parker@pterodactyl.io"
 
-LABEL author="vanes430" maintainer="admin@vanes430.my.id"
-LABEL org.opencontainers.image.source="https://github.com/vanes430/image"
-LABEL org.opencontainers.image.licenses=MIT
+# add container user and set stop signal
+RUN         useradd -m -d /home/container container
+STOPSIGNAL  SIGINT
 
-# Install required dependencies and create the 'container' user
-RUN apk add --no-cache \
-    ca-certificates \
-    curl \
-    ffmpeg \
-    git \
-    fontconfig \
-    libwebp-dev \
-    sqlite \
-    iproute2 \
-    openssl \
-    tar \
-    tzdata \
-    && adduser -D -h /home/container container
+RUN         apt update \
+            && apt -y install \
+                ffmpeg \
+                iproute2 \
+                git \
+                sqlite3 \
+                libsqlite3-dev \
+                ca-certificates \
+                dnsutils \
+                tzdata \
+                zip \
+                unzip \
+                tar \
+                curl \
+                build-essential \
+                libtool \
+                iputils-ping \
+                libnss3 \
+                tini
 
-# Switch to the 'container' user
-USER container
+RUN         npm install --global npm@latest typescript ts-node @types/node
 
-# Set environment variables for the container user and working directory
-ENV USER=container HOME=/home/container
-WORKDIR /home/container
+# install pnpm
+RUN         npm install -g corepack
+RUN         corepack enable
+RUN         corepack prepare pnpm@latest --activate
 
-# Copy the entrypoint script and make it executable
-COPY ./entrypoint.sh /entrypoint.sh
+USER        container
+ENV         USER=container HOME=/home/container
+WORKDIR     /home/container
 
-# Set the default command to run the entrypoint script
-CMD [ "/bin/bash", "/entrypoint.sh" ]
+COPY        --chown=container:container ./../entrypoint.sh /entrypoint.sh
+RUN         chmod +x /entrypoint.sh
+ENTRYPOINT    ["/usr/bin/tini", "-g", "--"]
+CMD         ["/entrypoint.sh"]

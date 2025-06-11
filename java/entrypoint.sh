@@ -31,7 +31,7 @@ INTERNAL_IP=$(ip route get 1 | awk '{print $NF;exit}')
 export INTERNAL_IP
 
 # Default the IMAGE_PROMPT environment variable to something nice
-IMAGE_PROMPT=${IMAGE_PROMPT:-$'\[\033[1;31m\]container\[\033[0m\]@\[\033[1;32m\]flakehost\[\033[0m\]~'}
+IMAGE_PROMPT=$'\033[1;31mcontainer\033[0m@\033[1;32mflakehost\033[0m~ '
 export IMAGE_PROMPT
 
 # Switch to the container's working directory
