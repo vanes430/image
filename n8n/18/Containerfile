@@ -1,0 +1,19 @@
+FROM --platform=$TARGETOS/$TARGETARCH node:18-bookworm-slim
+
+LABEL author="vanes430" maintainer="admin@vanes430.my.id"
+
+RUN apt-get update && apt-get install -y bash && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m -d /home/container container
+STOPSIGNAL SIGINT
+
+RUN npm install -g n8n
+
+USER container
+ENV USER=container \
+    HOME=/home/container \
+    SHELL=/bin/bash
+WORKDIR /home/container
+
+COPY ../entrypoint.sh /entrypoint.sh
+CMD [ "/bin/bash", "/entrypoint.sh" ]
