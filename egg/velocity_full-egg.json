@@ -1,0 +1,72 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2025-06-20T10:18:35+07:00",
+    "name": "Velocity+GeyserMC+Floodgate+SkinsRestorer+ViaVersion+ViaBackwards",
+    "author": "admin@vanes430.my.id",
+    "description": "Velocity is a Minecraft server proxy with unparalleled server support, scalability, and flexibility.",
+    "features": null,
+    "docker_images": {
+        "Java 21": "ghcr.io\/vanes430\/image:java-21-zulu"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -XX:+UseG1GC -XX:G1HeapRegionSize=4M -XX:+UnlockExperimentalVMOptions -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -XX:MaxInlineLevel=15 -DgeyserUdpPort={{GEYSER_PORT}} -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{\r\n    \"velocity.toml\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"bind = \": \"bind = \\\"0.0.0.0:{{server.build.default.port}}\\\"\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \"Done (\"\r\n}",
+        "logs": "{}",
+        "stop": "end"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n# Velocity+GeyserMC+Floodgate+SkinsRestorer+ViaVersion+ViaBackwards Auto Install Script (Debian\/wget)\r\n#\r\n# Server Files: \/mnt\/server\r\n\r\n# 1. Install dependencies\r\napt update \r\napt install -y jq wget\r\n\r\nPROJECT=velocity\r\n\r\n# 2. Tentukan JAR Velocity\r\nif [ -n \"${DL_PATH}\" ]; then\r\n  echo -e \"Using supplied download url: ${DL_PATH}\"\r\n  DOWNLOAD_URL=$(eval echo $(echo ${DL_PATH} | sed -e 's\/{{\/${\/g' -e 's\/}}\/}\/g'))\r\nelse\r\n  VER_EXISTS=$(wget -qO- https:\/\/api.papermc.io\/v2\/projects\/${PROJECT} | jq -r --arg VERSION $VELOCITY_VERSION '.versions[] | contains($VERSION)' | grep -m1 true)\r\n  LATEST_VERSION=$(wget -qO- https:\/\/api.papermc.io\/v2\/projects\/${PROJECT} | jq -r '.versions' | jq -r '.[-1]')\r\n  if [ \"${VER_EXISTS}\" == \"true\" ]; then\r\n    echo -e \"Version is valid. Using version ${VELOCITY_VERSION}\"\r\n  else\r\n    echo -e \"Using the latest ${PROJECT} version\"\r\n    VELOCITY_VERSION=${LATEST_VERSION}\r\n  fi\r\n  BUILD_EXISTS=$(wget -qO- https:\/\/api.papermc.io\/v2\/projects\/${PROJECT}\/versions\/${VELOCITY_VERSION} | jq -r --arg BUILD ${BUILD_NUMBER} '.builds[] | tostring | contains($BUILD)' | grep -m1 true)\r\n  LATEST_BUILD=$(wget -qO- https:\/\/api.papermc.io\/v2\/projects\/${PROJECT}\/versions\/${VELOCITY_VERSION} | jq -r '.builds' | jq -r '.[-1]')\r\n  if [ \"${BUILD_EXISTS}\" == \"true\" ]; then\r\n    echo -e \"Build is valid for version ${VELOCITY_VERSION}. Using build ${BUILD_NUMBER}\"\r\n  else\r\n    echo -e \"Using the latest ${PROJECT} build for version ${VELOCITY_VERSION}\"\r\n    BUILD_NUMBER=${LATEST_BUILD}\r\n  fi\r\n  JAR_NAME=${PROJECT}-${VELOCITY_VERSION}-${BUILD_NUMBER}.jar\r\n  echo \"Version being downloaded\"\r\n  echo -e \"MC Version: ${VELOCITY_VERSION}\"\r\n  echo -e \"Build: ${BUILD_NUMBER}\"\r\n  echo -e \"JAR Name of Build: ${JAR_NAME}\"\r\n  DOWNLOAD_URL=\"https:\/\/api.papermc.io\/v2\/projects\/${PROJECT}\/versions\/${VELOCITY_VERSION}\/builds\/${BUILD_NUMBER}\/downloads\/${JAR_NAME}\"\r\nfi\r\n\r\ncd \/mnt\/server\r\n\r\necho -e \"Running wget -O ${SERVER_JARFILE} ${DOWNLOAD_URL}\"\r\nif [ -f ${SERVER_JARFILE} ]; then\r\n  mv ${SERVER_JARFILE} ${SERVER_JARFILE}.old\r\nfi\r\nwget -O ${SERVER_JARFILE} ${DOWNLOAD_URL}\r\n\r\nmkdir -p plugins\r\n\r\n# 3. Geyser\r\necho -e \"Downloading Geyser\"\r\nGEYSER_HASH=$(wget -qO- https:\/\/download.geysermc.org\/v2\/projects\/geyser\/versions\/latest\/builds\/latest | jq -r .downloads.velocity.sha256)\r\nwget -O plugins\/geyser-velocity.jar https:\/\/download.geysermc.org\/v2\/projects\/geyser\/versions\/latest\/builds\/latest\/downloads\/velocity\r\necho \"${GEYSER_HASH} plugins\/geyser-velocity.jar\" | sha256sum -c\r\nRESULT=$?\r\nif [[ $RESULT -eq 0 ]]; then\r\n  echo \"Geyser SHA256 match\"\r\nelse\r\n  echo \"SHA256 does not match! Aborting...\"\r\n  rm plugins\/geyser-velocity.jar\r\n  exit 1\r\nfi\r\n\r\n# 4. Floodgate\r\necho -e \"Downloading Floodgate\"\r\nFLOODGATE_HASH=$(wget -qO- https:\/\/download.geysermc.org\/v2\/projects\/floodgate\/versions\/latest\/builds\/latest | jq -r .downloads.velocity.sha256)\r\nwget -O plugins\/floodgate-velocity.jar https:\/\/download.geysermc.org\/v2\/projects\/floodgate\/versions\/latest\/builds\/latest\/downloads\/velocity\r\necho \"${FLOODGATE_HASH} plugins\/floodgate-velocity.jar\" | sha256sum -c\r\nRESULT=$?\r\nif [[ $RESULT -eq 0 ]]; then\r\n  echo \"Floodgate SHA256 match\"\r\nelse\r\n  echo \"SHA256 does not match! Aborting...\"\r\n  rm plugins\/floodgate-velocity.jar\r\n  exit 1\r\nfi\r\n\r\n# 5. SkinsRestorer\r\necho -e \"Downloading latest SkinsRestorer...\"\r\n# Hapus SkinsRestorer lama jika ada\r\nfind plugins\/ -maxdepth 1 -type f -name 'SkinsRestorer*.jar' -exec rm {} \\;\r\nSKINS_API_URL=\"https:\/\/api.github.com\/repos\/SkinsRestorer\/SkinsRestorer\/releases\/latest\"\r\nSKINS_JAR_URL=$(wget -qO- $SKINS_API_URL | jq -r '.assets[] | select(.name | endswith(\".jar\")) | .browser_download_url' | head -n1)\r\nif [ -n \"$SKINS_JAR_URL\" ]; then\r\n  wget -O plugins\/SkinsRestorer.jar \"$SKINS_JAR_URL\"\r\n  echo \"Downloaded SkinsRestorer: $(basename $SKINS_JAR_URL)\"\r\nelse\r\n  echo \"Failed to find SkinsRestorer.jar in the latest release!\"\r\n  exit 1\r\nfi\r\n\r\n# 6. ViaVersion\r\necho -e \"Downloading latest ViaVersion...\"\r\nfind plugins\/ -maxdepth 1 -type f -name 'ViaVersion-*.jar' -exec rm {} \\;\r\nVIAVERSION_API_URL=\"https:\/\/api.github.com\/repos\/ViaVersion\/ViaVersion\/releases\/latest\"\r\nVIAVERSION_JAR_URL=$(wget -qO- $VIAVERSION_API_URL | jq -r '.assets[] | select(.name | test(\"^ViaVersion-.*\\\\.jar$\")) | .browser_download_url' | head -n1)\r\nif [ -n \"$VIAVERSION_JAR_URL\" ]; then\r\n  wget -O \"plugins\/$(basename $VIAVERSION_JAR_URL)\" \"$VIAVERSION_JAR_URL\"\r\n  echo \"Downloaded ViaVersion: $(basename $VIAVERSION_JAR_URL)\"\r\nelse\r\n  echo \"Failed to find ViaVersion jar in the latest release!\"\r\n  exit 1\r\nfi\r\n\r\n# 7. ViaBackwards\r\necho -e \"Downloading latest ViaBackwards...\"\r\nfind plugins\/ -maxdepth 1 -type f -name 'ViaBackwards-*.jar' -exec rm {} \\;\r\nVIABACKWARDS_API_URL=\"https:\/\/api.github.com\/repos\/ViaVersion\/ViaBackwards\/releases\/latest\"\r\nVIABACKWARDS_JAR_URL=$(wget -qO- $VIABACKWARDS_API_URL | jq -r '.assets[] | select(.name | test(\"^ViaBackwards-.*\\\\.jar$\")) | .browser_download_url' | head -n1)\r\nif [ -n \"$VIABACKWARDS_JAR_URL\" ]; then\r\n  wget -O \"plugins\/$(basename $VIABACKWARDS_JAR_URL)\" \"$VIABACKWARDS_JAR_URL\"\r\n  echo \"Downloaded ViaBackwards: $(basename $VIABACKWARDS_JAR_URL)\"\r\nelse\r\n  echo \"Failed to find ViaBackwards jar in the latest release!\"\r\n  exit 1\r\nfi",
+            "container": "ghcr.io\/parkervcp\/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Velocity Version",
+            "description": "The Velocity Proxy version to download.\r\n\r\nSet to 'latest ' the download the last stable build.\r\nSet to '1.1.x-SNAPSHOT' to get the latest dev build.",
+            "env_variable": "VELOCITY_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Server Jar File",
+            "description": "Server Jarfile, by default this is set to 'velocity.jar'.\r\nSet it to otherwise if you wish to have a different jarfile name.",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "velocity.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:\/^([\\w\\d._-]+)(\\.jar)$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "Build Number",
+            "description": "The build number for the velocity release.\r\n\r\nLeave at latest to always get the latest version. Invalid versions will default to latest.",
+            "env_variable": "BUILD_NUMBER",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Geyser Port",
+            "description": "The UDP port that Geyser will listen on\r\n\r\n\"-1\" will forcibly stop Geyser\r\n\"server\" will have Geyser listen on the same port as the TCP server",
+            "env_variable": "GEYSER_PORT",
+            "default_value": "19132",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string|max:6",
+            "field_type": "text"
+        }
+    ]
+}
