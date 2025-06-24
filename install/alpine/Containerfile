@@ -1,0 +1,15 @@
+# ██╗   ██╗ █████╗ ███╗   ██╗███████╗███████╗██╗  ██╗██████╗  ██████╗ 
+# ██║   ██║██╔══██╗████╗  ██║██╔════╝██╔════╝██║  ██║╚════██╗██╔═████╗
+# ██║   ██║███████║██╔██╗ ██║█████╗  ███████╗███████║ █████╔╝██║██╔██║
+# ╚██╗ ██╔╝██╔══██║██║╚██╗██║██╔══╝  ╚════██║╚════██║ ╚═══██╗████╔╝██║
+#  ╚████╔╝ ██║  ██║██║ ╚████║███████╗███████║     ██║██████╔╝╚██████╔╝
+#   ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝     ╚═╝╚═════╝  ╚═════╝ 
+# Simple Alpine image with wget, jq, curl, tar, unzip by vanes430
+
+FROM bellsoft/alpaquita-linux-base:latest
+
+LABEL author="vanes430" maintainer="admin@vanes430.my.id"
+LABEL org.opencontainers.image.source="https://github.com/vanes430/image"
+LABEL org.opencontainers.image.licenses=MIT
+
+RUN apk add --no-cache wget jq curl tar unzip
