@@ -5,33 +5,22 @@
 # ╚████╔╝ ██║  ██║██║ ╚████║███████╗███████║     ██║██████╔╝╚██████╔╝
 #  ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝     ╚═╝╚═════╝  ╚═════╝ 
 # Pterodactyl Image created by vanes430
-FROM --platform=$TARGETOS/$TARGETARCH alpine:latest
+FROM --platform=$TARGETOS/$TARGETARCH bellsoft/liberica-openjdk-alpine:21
 
 LABEL author="vanes430" maintainer="admin@vanes430.my.id"
 LABEL org.opencontainers.image.source="https://github.com/vanes430/image"
 LABEL org.opencontainers.image.licenses=MIT
 
-RUN apk add --no-cache bash wget tar fontconfig sqlite iproute2 openssl shadow
+RUN apk add --no-cache fontconfig iproute2 openssl sqlite tar shadow \
+    && adduser -D -h /home/container container
 
-ENV JDK_VERSION=jdk-22.0.1+8
-ENV JRE_URL=https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.1+8/OpenJDK22U-jre_x64_alpine-linux_hotspot_22.0.1_8.tar.gz
-ENV JAVA_HOME=/opt/java/openjdk
-ENV PATH="$JAVA_HOME/bin:$PATH"
-
-RUN mkdir -p $JAVA_HOME \
-    && wget -O /tmp/openjdk22.tar.gz $JRE_URL \
-    && tar -xzf /tmp/openjdk22.tar.gz -C $JAVA_HOME --strip-components=1 \
-    && rm /tmp/openjdk22.tar.gz
-
-ENV LANG=C.UTF-8
+ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
-ENV LC_ALL=C.UTF-8
-
-RUN useradd -m -d /home/container container
+ENV LC_ALL=en_US.UTF-8
 
 USER container
 ENV USER=container HOME=/home/container
 WORKDIR /home/container
 
 COPY ../entrypoint.sh /entrypoint.sh
-CMD ["/bin/bash", "/entrypoint.sh"]
+CMD [ "/bin/sh", "/entrypoint.sh" ]
