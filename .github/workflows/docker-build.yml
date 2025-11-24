@@ -32,7 +32,7 @@ jobs:
         with:
           registry: ghcr.io
           username: vanes430
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.PUBLIC_REPO_TOKEN }}
 
       # Build & push untuk setiap *.Dockerfile
       - name: Build and Push Images
